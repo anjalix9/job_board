@@ -6,64 +6,176 @@ class Login extends Component {
     this.state = {
       email: '',
       password: '',
-      errorMessage: ''
+      errorMessage: '',
+      isLoading: false,
+      showPassword: false,
+      emailFocus: false,
+      passwordFocus: false
     };
   }
 
   handleChange = (event) => {
-    this.setState({ [event.target.name]: event.target.value });
+    this.setState({ 
+      [event.target.name]: event.target.value,
+      errorMessage: '' // Clear error message when user types
+    });
   }
 
-  handleSubmit = (event) => {
+  handleSubmit = async (event) => {
     event.preventDefault();
     const { email, password } = this.state;
-    // Basic validation example
+    const { registeredUser } = this.props;
+    // Hardcoded credentials
+    const allowedEmail = 'user@example.com';
+    const allowedPassword = 'password123';
+
+    // Basic validation
     if (!email || !password) {
       this.setState({ errorMessage: 'Please enter both email and password.' });
       return;
     }
-    this.setState({ errorMessage: '' });
-    // Call onAuthSuccess callback if provided
-    if (this.props.onAuthSuccess) {
-      this.props.onAuthSuccess();
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      this.setState({ errorMessage: 'Please enter a valid email address.' });
+      return;
+    }
+
+    // Password length validation
+    if (password.length < 6) {
+      this.setState({ errorMessage: 'Password must be at least 6 characters long.' });
+      return;
+    }
+
+    this.setState({ isLoading: true, errorMessage: '' });
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const isHardcoded = email === allowedEmail && password === allowedPassword;
+    const isRegistered = registeredUser && email === registeredUser.email && password === registeredUser.password;
+
+    if (isHardcoded || isRegistered) {
+      if (this.props.onAuthSuccess) {
+        this.props.onAuthSuccess();
+      }
+    } else {
+      this.setState({ 
+        errorMessage: 'Invalid email or password.',
+        isLoading: false 
+      });
     }
   }
 
+  togglePasswordVisibility = () => {
+    this.setState(prevState => ({
+      showPassword: !prevState.showPassword
+    }));
+  }
+
+  handleFocus = (field) => {
+    this.setState({ [`${field}Focus`]: true });
+  }
+
+  handleBlur = (field) => {
+    this.setState({ [`${field}Focus`]: false });
+  }
+
   render() {
-    const { email, password, errorMessage } = this.state;
+    const { 
+      email, 
+      password, 
+      errorMessage, 
+      isLoading, 
+      showPassword,
+      emailFocus,
+      passwordFocus
+    } = this.state;
+
     return (
-      <div className="login-form">
-        <h2>Login</h2>
-        <form onSubmit={this.handleSubmit}>
-          <div>
-            <label>Email:</label><br />
-            <input
-              type="email"
-              name="email"
-              value={email}
-              onChange={this.handleChange}
-              required
-            />
-          </div>
-          <div>
-            <label>Password:</label><br />
-            <input
-              type="password"
-              name="password"
-              value={password}
-              onChange={this.handleChange}
-              required
-            />
-          </div>
-          {errorMessage && <p style={{color: 'red'}}>{errorMessage}</p>}
-          <button type="submit">Login</button>
-        </form>
-        <p>
-          Don't have an account?{' '}
-          <button onClick={this.props.onSwitchToSignup} style={{background: 'none', border: 'none', color: 'blue', textDecoration: 'underline', cursor: 'pointer', padding: 0}}>
-            Signup here
-          </button>
-        </p>
+      <div className="login-container">
+        <div className="login-form">
+          <h2 className="login-title">Welcome Back!</h2>
+          <p className="login-subtitle">Sign in to continue to your account</p>
+          
+          <form onSubmit={this.handleSubmit} className="login-form-content">
+            <div className={`form-group ${emailFocus ? 'focused' : ''}`}>
+              <label>Email Address</label>
+              <div className="input-wrapper">
+                <input
+                  type="email"
+                  name="email"
+                  value={email}
+                  onChange={this.handleChange}
+                  onFocus={() => this.handleFocus('email')}
+                  onBlur={() => this.handleBlur('email')}
+                  placeholder="Enter your email"
+                  required
+                />
+                <span className="input-icon">✉️</span>
+              </div>
+            </div>
+
+            <div className={`form-group ${passwordFocus ? 'focused' : ''}`}>
+              <label>Password</label>
+              <div className="input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={password}
+                  onChange={this.handleChange}
+                  onFocus={() => this.handleFocus('password')}
+                  onBlur={() => this.handleBlur('password')}
+                  placeholder="Enter your password"
+                  required
+                />
+                <button 
+                  type="button"
+                  className="toggle-password"
+                  onClick={this.togglePasswordVisibility}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
+            </div>
+
+            {errorMessage && (
+              <div className="error-message">
+                <span className="error-icon">⚠️</span>
+                {errorMessage}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className={`login-button ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="loading-spinner"></span>
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+
+            <div className="login-footer">
+              <p>
+                Don't have an account?{' '}
+                <button 
+                  type="button"
+                  onClick={this.props.onSwitchToSignup}
+                  className="switch-button"
+                >
+                  Sign up here
+                </button>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }
