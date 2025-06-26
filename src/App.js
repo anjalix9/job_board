@@ -10,6 +10,7 @@ class App extends Component {
       currentView: 'login',
       searchQuery: '',
       selectedCategory: 'all',
+      selectedJobType: 'all',
       isLoading: false,
       activeNav: 'home',
       showApplications: false,
@@ -21,8 +22,10 @@ class App extends Component {
           company: 'Tech Solutions',
           location: 'Remote',
           category: 'development',
+          jobType: 'full-time',
+          experience: 'mid-level',
           salary: '₹80k - ₹120k',
-          description: 'Looking for an experienced frontend developer...'
+          description: 'Looking for an experienced frontend developer with React, JavaScript, and CSS skills. Join our dynamic team!'
         },
         {
           id: 2,
@@ -30,8 +33,10 @@ class App extends Component {
           company: 'CloudNet',
           location: 'Bangalore',
           category: 'development',
+          jobType: 'full-time',
+          experience: 'senior',
           salary: '₹90k - ₹130k',
-          description: 'Join our growing backend team...'
+          description: 'Join our growing backend team. Experience with Node.js, Python, and databases required.'
         },
         {
           id: 3,
@@ -39,8 +44,65 @@ class App extends Component {
           company: 'DesignHub',
           location: 'New York',
           category: 'design',
+          jobType: 'contract',
+          experience: 'mid-level',
           salary: '₹70k - ₹100k',
-          description: 'Create beautiful user experiences...'
+          description: 'Create beautiful user experiences. Proficiency in Figma, Adobe Creative Suite, and user research.'
+        },
+        {
+          id: 4,
+          title: 'Data Scientist',
+          company: 'Analytics Corp',
+          location: 'Mumbai',
+          category: 'data',
+          jobType: 'full-time',
+          experience: 'senior',
+          salary: '₹100k - ₹150k',
+          description: 'Work with big data and machine learning. Python, R, and statistical analysis skills needed.'
+        },
+        {
+          id: 5,
+          title: 'Product Manager',
+          company: 'InnovateTech',
+          location: 'Delhi',
+          category: 'management',
+          jobType: 'full-time',
+          experience: 'senior',
+          salary: '₹120k - ₹180k',
+          description: 'Lead product development from concept to launch. Strong analytical and leadership skills required.'
+        },
+        {
+          id: 6,
+          title: 'DevOps Engineer',
+          company: 'CloudFirst',
+          location: 'Hyderabad',
+          category: 'development',
+          jobType: 'part-time',
+          experience: 'mid-level',
+          salary: '₹85k - ₹125k',
+          description: 'Manage cloud infrastructure and CI/CD pipelines. AWS, Docker, and Kubernetes experience needed.'
+        },
+        {
+          id: 7,
+          title: 'React Developer',
+          company: 'StartupXYZ',
+          location: 'Remote',
+          category: 'development',
+          jobType: 'contract',
+          experience: 'junior',
+          salary: '₹60k - ₹90k',
+          description: 'Join our startup team. Learn and grow with us. React and JavaScript skills required.'
+        },
+        {
+          id: 8,
+          title: 'Graphic Designer',
+          company: 'Creative Studio',
+          location: 'Chennai',
+          category: 'design',
+          jobType: 'part-time',
+          experience: 'junior',
+          salary: '₹40k - ₹70k',
+          description: 'Create stunning visuals for our clients. Adobe Creative Suite and creativity required.'
         }
       ],
       appliedJobs: [],
@@ -76,14 +138,28 @@ class App extends Component {
     this.setState({ selectedCategory: category });
   }
 
+  handleJobTypeChange = (jobType) => {
+    this.setState({ selectedJobType: jobType });
+  }
+
   handleApply = (jobId) => {
+    const { appliedJobs } = this.state;
+    const job = this.state.jobs.find(j => j.id === jobId);
+    
+    // Check if already applied
+    if (appliedJobs.some(appliedJob => appliedJob.id === jobId)) {
+      alert('You have already applied to this job!');
+      return;
+    }
+
     this.setState({ isLoading: true });
     setTimeout(() => {
-      const job = this.state.jobs.find(j => j.id === jobId);
       this.setState(prevState => ({
         isLoading: false,
         appliedJobs: [...prevState.appliedJobs, job],
-        activeNav: 'applications'
+        activeNav: 'applications',
+        showApplications: true,
+        showProfile: false
       }));
       alert('Application submitted successfully!');
     }, 1000);
@@ -102,17 +178,20 @@ class App extends Component {
       currentView: 'login',
       activeNav: 'home',
       showApplications: false,
-      showProfile: false
+      showProfile: false,
+      registeredUser: null // Clear registered user on logout
     });
   }
 
   getFilteredJobs = () => {
-    const { jobs, searchQuery, selectedCategory } = this.state;
+    const { jobs, searchQuery, selectedCategory, selectedJobType } = this.state;
     return jobs.filter(job => {
       const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          job.company.toLowerCase().includes(searchQuery.toLowerCase());
+                          job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          job.location.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || job.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesJobType = selectedJobType === 'all' || job.jobType === selectedJobType;
+      return matchesSearch && matchesCategory && matchesJobType;
     });
   }
 
@@ -267,7 +346,7 @@ class App extends Component {
   )
 
   render() {
-    const { currentView, searchQuery, selectedCategory, isLoading, activeNav, showApplications, showProfile, registeredUser } = this.state;
+    const { currentView, searchQuery, selectedCategory, selectedJobType, isLoading, activeNav, showApplications, showProfile, registeredUser } = this.state;
 
     if (currentView === 'login') {
       return (
@@ -357,47 +436,124 @@ class App extends Component {
                   onChange={this.handleSearch}
                   className="search-input"
                 />
-                <div className="category-filters">
-                  <button 
-                    className={`category-button ${selectedCategory === 'all' ? 'active' : ''}`}
-                    onClick={() => this.handleCategoryChange('all')}
-                  >
-                    All
-                  </button>
-                  <button 
-                    className={`category-button ${selectedCategory === 'development' ? 'active' : ''}`}
-                    onClick={() => this.handleCategoryChange('development')}
-                  >
-                    Development
-                  </button>
-                  <button 
-                    className={`category-button ${selectedCategory === 'design' ? 'active' : ''}`}
-                    onClick={() => this.handleCategoryChange('design')}
-                  >
-                    Design
-                  </button>
+                <div className="filter-section">
+                  <h3>Filter by Category</h3>
+                  <div className="category-filters">
+                    <button 
+                      className={`category-button ${selectedCategory === 'all' ? 'active' : ''}`}
+                      onClick={() => this.handleCategoryChange('all')}
+                    >
+                      All Categories
+                    </button>
+                    <button 
+                      className={`category-button ${selectedCategory === 'development' ? 'active' : ''}`}
+                      onClick={() => this.handleCategoryChange('development')}
+                    >
+                      Development
+                    </button>
+                    <button 
+                      className={`category-button ${selectedCategory === 'design' ? 'active' : ''}`}
+                      onClick={() => this.handleCategoryChange('design')}
+                    >
+                      Design
+                    </button>
+                    <button 
+                      className={`category-button ${selectedCategory === 'data' ? 'active' : ''}`}
+                      onClick={() => this.handleCategoryChange('data')}
+                    >
+                      Data Science
+                    </button>
+                    <button 
+                      className={`category-button ${selectedCategory === 'management' ? 'active' : ''}`}
+                      onClick={() => this.handleCategoryChange('management')}
+                    >
+                      Management
+                    </button>
+                  </div>
+                  
+                  <h3>Filter by Job Type</h3>
+                  <div className="job-type-filters">
+                    <button 
+                      className={`job-type-button ${selectedJobType === 'all' ? 'active' : ''}`}
+                      onClick={() => this.handleJobTypeChange('all')}
+                    >
+                      All Types
+                    </button>
+                    <button 
+                      className={`job-type-button ${selectedJobType === 'full-time' ? 'active' : ''}`}
+                      onClick={() => this.handleJobTypeChange('full-time')}
+                    >
+                      Full Time
+                    </button>
+                    <button 
+                      className={`job-type-button ${selectedJobType === 'part-time' ? 'active' : ''}`}
+                      onClick={() => this.handleJobTypeChange('part-time')}
+                    >
+                      Part Time
+                    </button>
+                    <button 
+                      className={`job-type-button ${selectedJobType === 'contract' ? 'active' : ''}`}
+                      onClick={() => this.handleJobTypeChange('contract')}
+                    >
+                      Contract
+                    </button>
+                    <button 
+                      className={`job-type-button ${selectedJobType === 'internship' ? 'active' : ''}`}
+                      onClick={() => this.handleJobTypeChange('internship')}
+                    >
+                      Internship
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <section className="job-listings">
-                <h2>Available Jobs</h2>
+                <h2>Available Jobs ({filteredJobs.length})</h2>
                 <div className="job-grid">
-                  {filteredJobs.map(job => (
-                    <div key={job.id} className="job-card">
-                      <h3>{job.title}</h3>
-                      <p className="company">{job.company}</p>
-                      <p className="location">{job.location}</p>
-                      <p className="salary">{job.salary}</p>
-                      <p className="description">{job.description}</p>
+                  {filteredJobs.map(job => {
+                    const isApplied = this.state.appliedJobs.some(appliedJob => appliedJob.id === job.id);
+                    return (
+                      <div key={job.id} className={`job-card ${isApplied ? 'applied' : ''}`}>
+                        <div className="job-header">
+                          <h3>{job.title}</h3>
+                          <div className="job-badges">
+                            <span className="job-type-badge">{job.jobType}</span>
+                            <span className="experience-badge">{job.experience}</span>
+                          </div>
+                        </div>
+                        <p className="company">{job.company}</p>
+                        <p className="location">{job.location}</p>
+                        <p className="salary">{job.salary}</p>
+                        <p className="description">{job.description}</p>
+                        {isApplied ? (
+                          <div className="application-status">
+                            <span className="status-badge">Applied</span>
+                          </div>
+                        ) : (
+                          <button 
+                            className="apply-button"
+                            onClick={() => this.handleApply(job.id)}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? 'Applying...' : 'Apply Now'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {filteredJobs.length === 0 && (
+                    <div className="no-jobs">
+                      <p>No jobs found matching your criteria.</p>
                       <button 
-                        className="apply-button"
-                        onClick={() => this.handleApply(job.id)}
-                        disabled={isLoading}
+                        className="clear-filters-button"
+                        onClick={() => {
+                          this.setState({ searchQuery: '', selectedCategory: 'all', selectedJobType: 'all' });
+                        }}
                       >
-                        {isLoading ? 'Applying...' : 'Apply Now'}
+                        Clear Filters
                       </button>
                     </div>
-                  ))}
+                  )}
                 </div>
               </section>
             </>

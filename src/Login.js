@@ -25,6 +25,7 @@ class Login extends Component {
     event.preventDefault();
     const { email, password } = this.state;
     const { registeredUser } = this.props;
+    
     // Hardcoded credentials
     const allowedEmail = 'user@example.com';
     const allowedPassword = 'password123';
@@ -50,19 +51,26 @@ class Login extends Component {
 
     this.setState({ isLoading: true, errorMessage: '' });
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const isHardcoded = email === allowedEmail && password === allowedPassword;
-    const isRegistered = registeredUser && email === registeredUser.email && password === registeredUser.password;
+      const isHardcoded = email === allowedEmail && password === allowedPassword;
+      const isRegistered = registeredUser && email === registeredUser.email && password === registeredUser.password;
 
-    if (isHardcoded || isRegistered) {
-      if (this.props.onAuthSuccess) {
-        this.props.onAuthSuccess();
+      if (isHardcoded || isRegistered) {
+        if (this.props.onAuthSuccess) {
+          this.props.onAuthSuccess();
+        }
+      } else {
+        this.setState({ 
+          errorMessage: 'Invalid email or password. Please try again.',
+          isLoading: false 
+        });
       }
-    } else {
+    } catch (error) {
       this.setState({ 
-        errorMessage: 'Invalid email or password.',
+        errorMessage: 'Login failed. Please check your connection and try again.',
         isLoading: false 
       });
     }
@@ -80,6 +88,12 @@ class Login extends Component {
 
   handleBlur = (field) => {
     this.setState({ [`${field}Focus`]: false });
+  }
+
+  handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      this.handleSubmit(event);
+    }
   }
 
   render() {
@@ -101,39 +115,47 @@ class Login extends Component {
           
           <form onSubmit={this.handleSubmit} className="login-form-content">
             <div className={`form-group ${emailFocus ? 'focused' : ''}`}>
-              <label>Email Address</label>
+              <label htmlFor="email">Email Address</label>
               <div className="input-wrapper">
                 <input
+                  id="email"
                   type="email"
                   name="email"
                   value={email}
                   onChange={this.handleChange}
                   onFocus={() => this.handleFocus('email')}
                   onBlur={() => this.handleBlur('email')}
+                  onKeyPress={this.handleKeyPress}
                   placeholder="Enter your email"
                   required
+                  autoComplete="email"
                 />
                 <span className="input-icon">✉️</span>
               </div>
             </div>
 
             <div className={`form-group ${passwordFocus ? 'focused' : ''}`}>
-              <label>Password</label>
+              <label htmlFor="password">Password</label>
               <div className="input-wrapper">
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={password}
                   onChange={this.handleChange}
                   onFocus={() => this.handleFocus('password')}
                   onBlur={() => this.handleBlur('password')}
+                  onKeyPress={this.handleKeyPress}
                   placeholder="Enter your password"
                   required
+                  autoComplete="current-password"
                 />
+                <span className="input-icon">🔒</span>
                 <button 
                   type="button"
                   className="toggle-password"
                   onClick={this.togglePasswordVisibility}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
                 </button>
@@ -141,7 +163,7 @@ class Login extends Component {
             </div>
 
             {errorMessage && (
-              <div className="error-message">
+              <div className="error-message" role="alert">
                 <span className="error-icon">⚠️</span>
                 {errorMessage}
               </div>
@@ -173,6 +195,11 @@ class Login extends Component {
                   Sign up here
                 </button>
               </p>
+              <div className="demo-credentials">
+                <p><strong>Demo Credentials:</strong></p>
+                <p>Email: user@example.com</p>
+                <p>Password: password123</p>
+              </div>
             </div>
           </form>
         </div>

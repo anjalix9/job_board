@@ -64,12 +64,20 @@ class Signup extends Component {
     // Simulate API call
     try {
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+      
+      // Register the user
       if (this.props.onRegisterUser) {
         this.props.onRegisterUser({ email, password });
       }
-      if (this.props.onAuthSuccess) {
-        this.props.onAuthSuccess();
+      
+      // Show success message and redirect to login
+      alert('Account created successfully! Please log in with your credentials.');
+      
+      // Switch to login page
+      if (this.props.onSwitchToLogin) {
+        this.props.onSwitchToLogin();
       }
+      
     } catch (error) {
       this.setState({ 
         errorMessage: 'Signup failed. Please try again.',
